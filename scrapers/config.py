@@ -170,3 +170,43 @@ REQUEST_DELAY_RANGE = (2.5, 5.5)
 
 REDDIT_SUBREDDITS = ["photomarket", "AVexchange"]
 REDDIT_USER_AGENT = "python:fx3-deal-finder:v1.0 (personal, non-commercial use)"
+
+# ---------------------------------------------------------------------------
+# Relevance filtering. Two independent safety nets against garbage results:
+#
+# 1. A price floor per category -- a real used FX3 body or GM-class zoom
+#    never actually sells for $1 or $49. This alone catches most scraper
+#    mistakes (e.g. a broken selector grabbing an unrelated "$49/mo
+#    financing" snippet instead of the real listing price).
+# 2. An accessory/junk-title filter -- catches cases where the price
+#    *does* happen to look plausible (e.g. Reverb matching an XLR cable
+#    or microphone mount that merely mentions "FX3" in its title).
+#
+# Both exist because a scraper returning zero results is an obvious,
+# visible failure -- a scraper returning *wrong* results silently isn't.
+# ---------------------------------------------------------------------------
+
+MIN_PLAUSIBLE_PRICE = {
+    "camera": 500,
+    "lens": 100,
+}
+
+# Any of these substrings appearing in a title (case-insensitive) marks it
+# as an accessory rather than the actual camera/lens, regardless of price.
+ACCESSORY_TITLE_KEYWORDS = [
+    "cable", "shock mount", "microphone", " mic ", "mic,", "strap",
+    "backpack", "case", " bag", "battery", "charger", "screen protector",
+    "rain cover", "lens cap", "memory card", "sd card", "cfexpress",
+    "cleaning kit", "wrist strap", "gimbal", "tripod", "monitor mount",
+    "cage rig", "follow focus", "windscreen", "dead cat", "filter kit",
+    "nd filter", "uv filter", "lens hood", "body cap", "cage for",
+]
+
+# Generic UI microcopy that a broken selector fallback might grab instead
+# of a real product title (button labels, nav links, etc.).
+UI_JUNK_TITLES = {
+    "add to cart", "buy now", "download", "compare", "wish list",
+    "wishlist", "view details", "learn more", "sign in", "subscribe",
+    "shop now", "see more", "in stock", "notify me", "view cart",
+    "checkout", "add to wishlist", "add to compare", "quick view",
+}
