@@ -30,9 +30,18 @@ free web page (GitHub Pages) you can check from anywhere.
                 └─ GitHub Pages serves docs/index.html as a website
 ```
 
-Nothing needs a server you pay for or maintain: GitHub Actions provides
-the daily compute for free (public repos get unlimited free Actions
-minutes), and GitHub Pages hosts the static dashboard for free.
+Nothing needs a server you pay for or maintain: GitHub Pages hosts the
+static dashboard for free regardless of repo visibility, and GitHub
+Actions gives every free personal account 2,000 minutes/month of compute
+-- this repo is currently **private**, so it draws from that quota (a
+public repo would get unlimited free minutes instead). One daily run
+of this workflow takes roughly 10-20 minutes (most of it is the
+randomized delays before each retail-site request, done on purpose to be
+polite), so a full month of daily runs is comfortably inside the free
+2,000-minute allowance. If you'd rather not think about it at all, making
+the repo public would remove the cap entirely -- entirely optional, and
+only sensible if you're fine with the code (not your API keys, those stay
+secret either way) being publicly visible.
 
 ### Repo layout
 

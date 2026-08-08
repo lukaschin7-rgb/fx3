@@ -28,6 +28,7 @@ from scrapers import (  # noqa: E402
     keh_scraper,
     mpb_scraper,
     reddit_scraper,
+    relevance,
     reverb_scraper,
 )
 from scrapers.config import ALL_TARGETS, CREDIT_CARD_PAYABLE  # noqa: E402
@@ -94,6 +95,13 @@ def main() -> None:
                         # Reddit posts legitimately have no structured price;
                         # every other source should have one, so skip anything
                         # that came back malformed.
+                        continue
+
+                    if not relevance.is_plausible_listing(raw.get("title"), raw.get("price"), target.category):
+                        logger.info(
+                            "Filtered out implausible result from %s for %s: %r ($%s)",
+                            source, target.key, raw.get("title"), raw.get("price"),
+                        )
                         continue
 
                     listing = {

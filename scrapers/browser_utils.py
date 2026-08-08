@@ -24,12 +24,21 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
-from scrapers.config import DEFAULT_USER_AGENT, REQUEST_DELAY_RANGE
+from scrapers.config import DEFAULT_USER_AGENT, REQUEST_DELAY_RANGE, UI_JUNK_TITLES
 from scrapers.http_utils import is_allowed
 
 logger = logging.getLogger(__name__)
 
 _PRICE_RE = re.compile(r"\$\s?([\d][\d,]*(?:\.\d{2})?)")
+
+
+def _is_junk_title(text: str) -> bool:
+    """Catches generic button/nav text ("Add to Cart", "Download") that a
+    loose selector or the generic fallback might grab instead of a real
+    product title -- this is a first pass, scrapers.relevance applies a
+    fuller check later once price/category are known."""
+    normalized = text.strip().lower()
+    return (not normalized) or normalized in UI_JUNK_TITLES or len(normalized.split()) < 2
 
 
 def fetch_rendered_html(url: str, wait_selector: str | None = None, timeout_ms: int = 15000) -> str | None:
@@ -91,12 +100,15 @@ def extract_listing_cards(
 
             if not (title_el and price_el and link_el):
                 continue
+            title_text = title_el.get_text(strip=True)
+            if _is_junk_title(title_text):
+                continue
             price_match = _PRICE_RE.search(price_el.get_text())
             if not price_match:
                 continue
             results.append(
                 {
-                    "title": title_el.get_text(strip=True),
+                    "title": title_text,
                     "price": float(price_match.group(1).replace(",", "")),
                     "url": urljoin(base_url, link_el.get("href", "")),
                 }
@@ -124,13 +136,16 @@ def extract_listing_cards(
             container = container.parent
         if not link_el:
             continue
+        title_text = link_el.get_text(strip=True)
+        if _is_junk_title(title_text):
+            continue
         url = urljoin(base_url, link_el.get("href", ""))
         if url in seen_urls:
             continue
         seen_urls.add(url)
         results.append(
             {
-                "title": link_el.get_text(strip=True),
+                "title": title_text,
                 "price": float(price_match.group(1).replace(",", "")),
                 "url": url,
             }
