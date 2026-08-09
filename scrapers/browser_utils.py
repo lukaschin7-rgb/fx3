@@ -41,7 +41,7 @@ def _is_junk_title(text: str) -> bool:
     return (not normalized) or normalized in UI_JUNK_TITLES or len(normalized.split()) < 2
 
 
-def fetch_rendered_html(url: str, wait_selector: str | None = None, timeout_ms: int = 15000) -> str | None:
+def fetch_rendered_html(url: str, wait_selector: str | None = None, timeout_ms: int = 20000) -> str | None:
     """Load `url` in headless Chromium and return the fully-rendered HTML,
     or None if robots.txt disallows it or the page fails to load."""
     if not is_allowed(url):
@@ -55,6 +55,13 @@ def fetch_rendered_html(url: str, wait_selector: str | None = None, timeout_ms: 
             browser = p.chromium.launch(headless=True)
             page = browser.new_page(user_agent=DEFAULT_USER_AGENT)
             page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
+            # Some storefronts (notably Magento, which KEH runs on) render
+            # the base page from cache and hydrate the actual price via a
+            # short JS call slightly afterward, specifically so the page
+            # itself stays cacheable. "domcontentloaded" fires before that
+            # JS runs, so give it a brief head start before polling for the
+            # price selector below.
+            page.wait_for_timeout(1500)
             if wait_selector:
                 try:
                     page.wait_for_selector(wait_selector, timeout=timeout_ms)
