@@ -157,7 +157,14 @@ CREDIT_CARD_PAYABLE = {
     "bhphoto": True,
     "adorama": True,
     "reddit": False,
+    "fredmiranda": False,
 }
+
+# Sources where a listing legitimately has no structured price in search
+# results -- peer-to-peer classifieds embed the price in the post title
+# (if at all) rather than a dedicated price field, so we don't reject a
+# result just because price came back None.
+PRICE_OPTIONAL_SOURCES = {"reddit", "fredmiranda"}
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "

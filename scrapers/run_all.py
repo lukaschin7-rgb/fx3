@@ -25,20 +25,21 @@ from scrapers import (  # noqa: E402
     bhphoto_scraper,
     dedupe,
     ebay_scraper,
+    fredmiranda_scraper,
     keh_scraper,
     mpb_scraper,
     reddit_scraper,
     relevance,
     reverb_scraper,
 )
-from scrapers.config import ALL_TARGETS, CREDIT_CARD_PAYABLE  # noqa: E402
+from scrapers.config import ALL_TARGETS, CREDIT_CARD_PAYABLE, PRICE_OPTIONAL_SOURCES  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("run_all")
 
 # (source name, callable). API-based sources take (term); eBay also wants
 # the target's category so it knows whether to look for a shutter count.
-SOURCES = ["ebay", "reverb", "mpb", "keh", "bhphoto", "adorama", "reddit"]
+SOURCES = ["ebay", "reverb", "mpb", "keh", "bhphoto", "adorama", "reddit", "fredmiranda"]
 
 
 def run_source(source: str, term: str, category: str) -> list[dict]:
@@ -57,6 +58,8 @@ def run_source(source: str, term: str, category: str) -> list[dict]:
             return bhphoto_scraper.search(term)
         if source == "adorama":
             return adorama_scraper.search(term)
+        if source == "fredmiranda":
+            return fredmiranda_scraper.search(term)
     except Exception as exc:  # noqa: BLE001 -- one source failing must not stop the run
         logger.exception("Scraper %s failed for term %r: %s", source, term, exc)
         return []
@@ -91,10 +94,10 @@ def main() -> None:
                 for raw in raw_results:
                     if not raw.get("url"):
                         continue
-                    if raw.get("price") is None and source != "reddit":
-                        # Reddit posts legitimately have no structured price;
-                        # every other source should have one, so skip anything
-                        # that came back malformed.
+                    if raw.get("price") is None and source not in PRICE_OPTIONAL_SOURCES:
+                        # Peer-to-peer classifieds (Reddit, FredMiranda) legitimately
+                        # have no structured price; every other source should have
+                        # one, so skip anything that came back malformed.
                         continue
 
                     if not relevance.is_plausible_listing(raw.get("title"), raw.get("price"), target.category):

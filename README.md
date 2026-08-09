@@ -198,21 +198,33 @@ just a list, no other code needs to change.
 | B&H (used dept.) | scraped (headless browser) | Yes |
 | Adorama (used dept.) | scraped (headless browser) | Yes |
 | Reddit (r/photomarket, r/AVexchange) | official read-only JSON API | Usually not (PayPal G&S / cash) |
+| FredMiranda (Buy & Sell forum, board 10) | scraped (plain HTTP, no headless browser needed) | No (peer-to-peer) |
 
 **Facebook Marketplace and Craigslist were deliberately left out.** Both
 require a logged-in session and actively fingerprint/block automated
 access, and Craigslist in particular has a history of pursuing scrapers
-legally. Reddit's public API covers the same "peer-to-peer classifieds"
+legally. Reddit and FredMiranda cover the same "peer-to-peer classifieds"
 niche without those problems.
 
-The four retail-site scrapers (MPB/KEH/B&H/Adorama) check `robots.txt`
-before every request, use a randomized 2.5-5.5 second delay between
-requests, and identify as a normal desktop browser rather than an
-aggressive bot.
+The four retail-site scrapers (MPB/KEH/B&H/Adorama) and the FredMiranda
+scraper check `robots.txt` before every request, use a randomized
+2.5-5.5 second delay between requests, and identify as a normal desktop
+browser rather than an aggressive bot.
+
+**FredMiranda specifics/limitations:** it only reads the current front
+page of the board (the most recent threads) once per run, not every page
+ever posted -- fine for a daily "what's new" check, but a thread that's
+scrolled off the front page between runs won't be picked up. Matching is
+a plain case-insensitive substring match against each search term, so
+phrasing quirks (e.g. "24-70 GM2" vs "24-70mm GM II") can cause misses;
+this is looser than eBay/Reverb's real search but was the simplest thing
+that could work without live access to verify the site's own search
+feature. The thread-link CSS selector is, like the four retail scrapers,
+an educated guess -- see Troubleshooting below if it comes back empty.
 
 ## Ranking and dedup logic
 
-- Credit-card-payable sites are ranked above non-CC sites (Reddit).
+- Credit-card-payable sites are ranked above non-CC sites (Reddit, FredMiranda).
 - Within that, sorted by price ascending.
 - Near-identical listings that show up on two sites (same price within
   ~3% and near-identical title) are collapsed into one row, with "also
@@ -220,17 +232,21 @@ aggressive bot.
 - A listing only counts as "New Today" the first time its (source, URL)
   pair has ever been seen. Re-appearing the next day doesn't re-flag it.
 
-## Troubleshooting the retail scrapers (MPB / KEH / B&H / Adorama)
+## Troubleshooting the retail scrapers (MPB / KEH / B&H / Adorama / FredMiranda)
 
-These four sites don't have a public API, so the scrapers render the page
-in a headless browser and pull listings out of the HTML using CSS
-selectors. **These selectors were written from general knowledge of each
-site's layout, not verified against the live pages** (this dev
-environment couldn't reach those domains to check), so there's a real
-chance one or more needs a small fix before it returns results.
+These sites don't have a public API, so the scrapers render the page (in
+a headless browser for MPB/KEH/B&H/Adorama, plain HTTP for FredMiranda)
+and pull listings out of the HTML using CSS selectors. **These selectors
+were written from general knowledge of each site's layout, not verified
+against the live pages** (this dev environment couldn't reach those
+domains to check).
 
-If a scraper starts returning nothing (check the Actions run logs, or the
-"warnings" count on the dashboard header):
+Confirmed as of the first live runs: **MPB, KEH, B&H, and Adorama's
+selectors are currently stale** -- every search times out waiting for the
+guessed selector and falls back to a generic extraction pass that (after
+the relevance filter) mostly finds nothing. They're safe to leave running
+(they fail closed, not with garbage), but they won't surface real listings
+until someone fixes the selectors against the live markup:
 
 1. Open the site's search page in your phone or laptop browser (e.g.
    `mpb.com/en-us/search?query=sony+fx3`).
@@ -240,6 +256,9 @@ If a scraper starts returning nothing (check the Actions run logs, or the
 4. Open the matching file (`scrapers/mpb_scraper.py`,
    `keh_scraper.py`, `bhphoto_scraper.py`, or `adorama_scraper.py`) and
    update the `SELECTORS` dictionary at the top with what you found.
+   (For FredMiranda, it's `THREAD_LINK_SELECTOR` in
+   `scrapers/fredmiranda_scraper.py` -- find the link element each thread
+   title lives in.)
 5. Commit and push -- no other code needs to change.
 
 If you'd rather not deal with this yourself, paste me what you see in dev
