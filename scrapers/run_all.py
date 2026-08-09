@@ -42,18 +42,18 @@ logger = logging.getLogger("run_all")
 SOURCES = ["ebay", "reverb", "mpb", "keh", "bhphoto", "adorama", "reddit", "fredmiranda"]
 
 
-def run_source(source: str, term: str, category: str) -> list[dict]:
+def run_source(source: str, term: str, target) -> list[dict]:
     try:
         if source == "ebay":
-            return ebay_scraper.search(term, category)
+            return ebay_scraper.search(term, target.category)
         if source == "reverb":
             return reverb_scraper.search(term)
         if source == "reddit":
             return reddit_scraper.search(term)
         if source == "mpb":
-            return mpb_scraper.search(term)
+            return mpb_scraper.search(term, target)
         if source == "keh":
-            return keh_scraper.search(term)
+            return keh_scraper.search(term, target)
         if source == "bhphoto":
             return bhphoto_scraper.search(term)
         if source == "adorama":
@@ -84,7 +84,7 @@ def main() -> None:
             for term in target.search_terms:
                 logger.info("Searching %s for %r (%s)", source, term, target.key)
                 try:
-                    raw_results = run_source(source, term, target.category)
+                    raw_results = run_source(source, term, target)
                 except Exception as exc:  # noqa: BLE001
                     msg = f"{source}/{target.key}/{term}: {exc}"
                     logger.exception(msg)
