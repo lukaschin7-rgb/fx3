@@ -18,6 +18,13 @@ class GearTarget:
     category: str           # "camera" or "lens"
     search_terms: list[str] # phrases sent to each source's search
     is_primary: bool = True # False = "candidate favorite", only surfaced if it trends
+    # Direct product-page URLs, for sites that organize by one page per exact
+    # item (with each available condition/grade priced on that same page)
+    # rather than a keyword-searchable results grid. Filled in as we confirm
+    # real URLs -- a target with none set here is simply skipped by that
+    # scraper (logged, not an error) until we have a confirmed URL for it.
+    mpb_url: str | None = None
+    keh_url: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -30,6 +37,8 @@ CAMERAS: list[GearTarget] = [
         label="Sony FX3",
         category="camera",
         search_terms=["Sony FX3", "Sony ILME-FX3"],
+        mpb_url="https://www.mpb.com/en-us/product/sony-pxw-fx3",
+        keh_url="https://www.keh.com/shop/sony-cinema-line-fx3-full-frame-digital-camera-4k120p-12mp.html",
     ),
 ]
 
