@@ -1,16 +1,15 @@
 name: Daily FX3 deal scrape
 
-# Runs once a day automatically (GitHub's servers do the work -- your
-# phone/laptop doesn't need to be on), plus you can trigger it manually
-# any time from the Actions tab ("Run workflow" button).
+# The automatic daily schedule is turned OFF (paused, not deleted) --
+# uncomment the `schedule:` block below to turn it back on. In the
+# meantime this still runs on demand any time from the Actions tab
+# ("Run workflow" button) via workflow_dispatch.
 #
 # NOTE: scheduled workflows only fire from whatever is on the repo's
-# default branch. If this file currently lives on a feature branch, the
-# daily run won't actually start until it's merged into main. Manual runs
-# (workflow_dispatch) work from any branch in the meantime.
+# default branch. Manual runs (workflow_dispatch) work from any branch.
 on:
-  schedule:
-    - cron: "0 13 * * *"  # 13:00 UTC daily -- ~6am Pacific / 9am Eastern. Edit to taste.
+  # schedule:
+  #   - cron: "0 13 * * *"  # 13:00 UTC daily -- ~6am Pacific / 9am Eastern.
   workflow_dispatch: {}
 
 permissions:
